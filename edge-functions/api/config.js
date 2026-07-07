@@ -1,8 +1,14 @@
-export function onRequestGet({ env }) {
+function getRuntimeEnv() {
+  return typeof env === "undefined" ? {} : env
+}
+
+export function onRequestGet() {
+  const runtimeEnv = getRuntimeEnv()
+
   return new Response(
     JSON.stringify({
       cloudEnabled: Boolean(globalThis.WORKOUT_KV || globalThis.workout_kv || globalThis.my_kv),
-      authEnabled: Boolean(env.APP_PASSWORD && env.AUTH_SECRET),
+      authEnabled: Boolean(runtimeEnv.APP_PASSWORD && runtimeEnv.AUTH_SECRET),
     }),
     {
       headers: {

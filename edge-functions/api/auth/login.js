@@ -18,9 +18,14 @@ async function sha256(value) {
     .join("")
 }
 
-export async function onRequestPost({ request, env }) {
-  const password = env.APP_PASSWORD
-  const secret = env.AUTH_SECRET
+function getRuntimeEnv() {
+  return typeof env === "undefined" ? {} : env
+}
+
+export async function onRequestPost({ request }) {
+  const runtimeEnv = getRuntimeEnv()
+  const password = runtimeEnv.APP_PASSWORD
+  const secret = runtimeEnv.AUTH_SECRET
 
   if (!password || !secret) {
     return json({ error: "密码环境变量还没有配置" }, { status: 500 })
