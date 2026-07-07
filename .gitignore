@@ -22,3 +22,9 @@ tsconfig.tsbuildinfo
 
 # pnpm
 pnpm-lock.yaml
+
+# Tencent Cloud EdgeOne
+.env
+.edgeone/*
+.tef_dist/*
+  
