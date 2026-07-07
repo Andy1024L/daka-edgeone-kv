@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { AUTH_COOKIE, getAuthToken, isAuthConfigured, verifyPassword } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
+export const runtime = "edge"
 
 export async function POST(request: Request) {
   if (!isAuthConfigured()) {
