@@ -1,4 +1,5 @@
 const WORKOUTS_KEY = "workouts_all"
+const AUTH_COOKIE = "daka_auth"
 
 function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
@@ -12,6 +13,42 @@ function json(data, init = {}) {
 
 function getKv() {
   return globalThis.WORKOUT_KV || globalThis.workout_kv || globalThis.my_kv || null
+}
+
+function getRuntimeEnv() {
+  return typeof env === "undefined" ? {} : env
+}
+
+async function sha256(value) {
+  const data = new TextEncoder().encode(value)
+  const digest = await crypto.subtle.digest("SHA-256", data)
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+}
+
+function getCookie(request, name) {
+  const cookieHeader = request.headers.get("cookie") || ""
+  const cookies = cookieHeader.split(";").map((item) => item.trim())
+  const cookie = cookies.find((item) => item.startsWith(`${name}=`))
+  return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : ""
+}
+
+async function assertAuthenticated(request) {
+  const runtimeEnv = getRuntimeEnv()
+  const password = runtimeEnv.APP_PASSWORD
+  const secret = runtimeEnv.AUTH_SECRET
+
+  if (!password || !secret) {
+    return json({ error: "密码环境变量还没有配置" }, { status: 500 })
+  }
+
+  const expectedToken = await sha256(`${password}:${secret}`)
+  if (getCookie(request, AUTH_COOKIE) !== expectedToken) {
+    return json({ error: "请先登录" }, { status: 401 })
+  }
+
+  return null
 }
 
 function normalizeRecord(value) {
@@ -61,7 +98,10 @@ function requireKv() {
   return kv
 }
 
-export async function onRequestGet() {
+export async function onRequestGet({ request }) {
+  const authError = await assertAuthenticated(request)
+  if (authError) return authError
+
   try {
     const kv = requireKv()
     return json({ records: await getWorkouts(kv) })
@@ -71,6 +111,9 @@ export async function onRequestGet() {
 }
 
 export async function onRequestPost({ request }) {
+  const authError = await assertAuthenticated(request)
+  if (authError) return authError
+
   try {
     const kv = requireKv()
     const body = await request.json().catch(() => null)
@@ -87,7 +130,10 @@ export async function onRequestPost({ request }) {
   }
 }
 
-export async function onRequestDelete() {
+export async function onRequestDelete({ request }) {
+  const authError = await assertAuthenticated(request)
+  if (authError) return authError
+
   try {
     const kv = requireKv()
     await kv.delete(WORKOUTS_KEY)
