@@ -1,0 +1,5 @@
+{
+  "cloudFunctions": {
+    "overseasRegions": ["ap-singapore"]
+  }
+}

@@ -15,8 +15,8 @@ function getKv() {
   return globalThis.WORKOUT_KV || globalThis.workout_kv || globalThis.my_kv || null
 }
 
-function getRuntimeEnv() {
-  return typeof env === "undefined" ? {} : env
+function getRuntimeEnv(context) {
+  return context?.env || {}
 }
 
 async function sha256(value) {
@@ -34,8 +34,8 @@ function getCookie(request, name) {
   return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : ""
 }
 
-async function assertAuthenticated(request) {
-  const runtimeEnv = getRuntimeEnv()
+async function assertAuthenticated(request, context) {
+  const runtimeEnv = getRuntimeEnv(context)
   const password = runtimeEnv.APP_PASSWORD
   const secret = runtimeEnv.AUTH_SECRET
 
@@ -72,8 +72,9 @@ async function saveWorkouts(kv, records) {
   return cleanRecords
 }
 
-export async function onRequestPatch({ request, params }) {
-  const authError = await assertAuthenticated(request)
+export async function onRequestPatch(context) {
+  const { request, params } = context
+  const authError = await assertAuthenticated(request, context)
   if (authError) return authError
 
   try {
@@ -101,8 +102,9 @@ export async function onRequestPatch({ request, params }) {
   }
 }
 
-export async function onRequestDelete({ request, params }) {
-  const authError = await assertAuthenticated(request)
+export async function onRequestDelete(context) {
+  const { request, params } = context
+  const authError = await assertAuthenticated(request, context)
   if (authError) return authError
 
   try {

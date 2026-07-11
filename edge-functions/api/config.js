@@ -1,9 +1,9 @@
-function getRuntimeEnv() {
-  return typeof env === "undefined" ? {} : env
+function getRuntimeEnv(context) {
+  return context?.env || {}
 }
 
-export function onRequestGet() {
-  const runtimeEnv = getRuntimeEnv()
+export function onRequestGet(context) {
+  const runtimeEnv = getRuntimeEnv(context)
 
   return new Response(
     JSON.stringify({

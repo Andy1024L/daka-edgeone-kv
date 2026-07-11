@@ -18,12 +18,13 @@ async function sha256(value) {
     .join("")
 }
 
-function getRuntimeEnv() {
-  return typeof env === "undefined" ? {} : env
+function getRuntimeEnv(context) {
+  return context?.env || {}
 }
 
-export async function onRequestPost({ request }) {
-  const runtimeEnv = getRuntimeEnv()
+export async function onRequestPost(context) {
+  const { request } = context
+  const runtimeEnv = getRuntimeEnv(context)
   const password = runtimeEnv.APP_PASSWORD
   const secret = runtimeEnv.AUTH_SECRET
 

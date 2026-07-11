@@ -15,8 +15,8 @@ function getKv() {
   return globalThis.WORKOUT_KV || globalThis.workout_kv || globalThis.my_kv || null
 }
 
-function getRuntimeEnv() {
-  return typeof env === "undefined" ? {} : env
+function getRuntimeEnv(context) {
+  return context?.env || {}
 }
 
 async function sha256(value) {
@@ -34,8 +34,8 @@ function getCookie(request, name) {
   return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : ""
 }
 
-async function assertAuthenticated(request) {
-  const runtimeEnv = getRuntimeEnv()
+async function assertAuthenticated(request, context) {
+  const runtimeEnv = getRuntimeEnv(context)
   const password = runtimeEnv.APP_PASSWORD
   const secret = runtimeEnv.AUTH_SECRET
 
@@ -98,8 +98,9 @@ function requireKv() {
   return kv
 }
 
-export async function onRequestGet({ request }) {
-  const authError = await assertAuthenticated(request)
+export async function onRequestGet(context) {
+  const { request } = context
+  const authError = await assertAuthenticated(request, context)
   if (authError) return authError
 
   try {
@@ -110,8 +111,9 @@ export async function onRequestGet({ request }) {
   }
 }
 
-export async function onRequestPost({ request }) {
-  const authError = await assertAuthenticated(request)
+export async function onRequestPost(context) {
+  const { request } = context
+  const authError = await assertAuthenticated(request, context)
   if (authError) return authError
 
   try {
@@ -130,8 +132,9 @@ export async function onRequestPost({ request }) {
   }
 }
 
-export async function onRequestDelete({ request }) {
-  const authError = await assertAuthenticated(request)
+export async function onRequestDelete(context) {
+  const { request } = context
+  const authError = await assertAuthenticated(request, context)
   if (authError) return authError
 
   try {

@@ -231,10 +231,25 @@ function HomeView({ records, onRecordCreated }: { records: CheckInRecord[]; onRe
 }
 
 export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [activeTab, setActiveTab] = useState<AppTab>("home")
   const [records, setRecords] = useState<CheckInRecord[]>(() => getRecords())
 
   useEffect(() => {
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) {
+          window.location.replace("/login?next=/")
+          return
+        }
+        setIsAuthenticated(true)
+      })
+      .catch(() => window.location.replace("/login?next=/"))
+  }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+
     let isMounted = true
 
     getWorkouts()
@@ -248,11 +263,13 @@ export default function HomePage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [isAuthenticated])
 
   const handleRecordCreated = useCallback((record: CheckInRecord) => {
     setRecords((current) => mergeRecordLists([record], current))
   }, [])
+
+  if (!isAuthenticated) return <main className="min-h-[100dvh] bg-background" />
 
   return (
     <AppTabProvider value={{ activeTab, setActiveTab }}>
